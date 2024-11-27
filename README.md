@@ -2,6 +2,14 @@
 
 A Python library for downloading videos from YouTube Mix playlists.
 
+
+[View on GitHub](https://github.com/benny-png/YOUR_YOUTUBE_MUSIC_MIX_DOWNLOADER)
+[View on PyPI](https://pypi.org/project/youtube-mix-dl/) (Note: PyPI version may have issues, if so use source code by cloning )
+
+[![Downloads](https://pepy.tech/badge/youtube-mix-dl)](https://pepy.tech/project/youtube-mix-dl)
+[![Downloads](https://pepy.tech/badge/youtube-mix-dl/month)](https://pepy.tech/project/youtube-mix-dl)
+[![Downloads](https://pepy.tech/badge/youtube-mix-dl/week)](https://pepy.tech/project/youtube-mix-dl)
+
 ## Requirements
 
 ### Python Dependencies
