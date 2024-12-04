@@ -1,50 +1,12 @@
-# YouTube Mix Downloader
+# YouTube Downloader
 
-A Python library for downloading videos from YouTube Mix playlists.
-
+A Python library for downloading videos from YouTube and YouTube Mix playlists.
 
 [View on GitHub](https://github.com/benny-png/YOUR_YOUTUBE_MUSIC_MIX_DOWNLOADER)
-[View on PyPI](https://pypi.org/project/youtube-mix-dl/) (Note: PyPI version may have issues, if so use source code by cloning )
 
 [![Downloads](https://pepy.tech/badge/youtube-mix-dl)](https://pepy.tech/project/youtube-mix-dl)
 [![Downloads](https://pepy.tech/badge/youtube-mix-dl/month)](https://pepy.tech/project/youtube-mix-dl)
 [![Downloads](https://pepy.tech/badge/youtube-mix-dl/week)](https://pepy.tech/project/youtube-mix-dl)
-
-## Requirements
-
-### Python Dependencies
-```bash
-pip install selenium>=4.0.0 webdriver-manager>=3.8.0 yt-dlp>=2023.0.0
-```
-
-### System Requirements
-
-#### FFmpeg Installation
-
-**Windows:**
-```bash
-winget install FFmpeg
-```
-
-**Linux (Ubuntu/Debian):**
-```bash
-sudo apt update
-sudo apt install ffmpeg
-```
-
-**macOS:**
-```bash
-brew install ffmpeg
-```
-
-### Browser Requirements
-- Google Chrome or Chromium browser
-- ChromeDriver (automatically installed by webdriver-manager)
-
-### Development Requirements
-```bash
-pip install build twine pytest black isort mypy
-```
 
 ## Installation
 
@@ -52,105 +14,101 @@ pip install build twine pytest black isort mypy
 pip install youtube_mix_dl
 ```
 
+### Dependencies
+```bash
+pip install selenium>=4.0.0 webdriver-manager>=3.8.0 yt-dlp>=2023.0.0
+```
+
+### System Requirements
+
+#### FFmpeg Installation
+- Windows: `winget install FFmpeg`
+- Linux: `sudo apt update && sudo apt install ffmpeg`
+- macOS: `brew install ffmpeg`
+
+- Google Chrome/Chromium browser
+- ChromeDriver (auto-installed by webdriver-manager)
+
 ## Usage
 
+### Single Video Download
 ```python
-from youtube_mix_dl import YoutubeMixDownloader
+from youtube_mix_dl import YouTubeDownloader
 
-# Initialize the downloader
-downloader = YoutubeMixDownloader(output_path="downloads")
+# Basic download
+downloader = YouTubeDownloader(output_path="downloads")
+success = downloader.download_video("https://youtube.com/watch?v=...")
 
-# Define a progress callback (optional)
+# Custom format (e.g., audio only)
+options = {
+    'format': 'bestaudio[ext=m4a]',
+    'postprocessors': [{'key': 'FFmpegExtractAudio'}]
+}
+success = downloader.download_video("https://youtube.com/watch?v=...", options)
+
+# Get video information
+info = downloader.get_video_info("https://youtube.com/watch?v=...")
+```
+
+### Mix Playlist Download
+```python
+# Progress tracking
 def progress_callback(message):
     print(message)
 
-# Create downloader with callback
-downloader = YoutubeMixDownloader(
+downloader = YouTubeDownloader(
     output_path="downloads",
     progress_callback=progress_callback
 )
 
-# Download a mix
+# Download mix
 mix_url = "https://www.youtube.com/watch?v=..."
-num_videos = 25
-successful_downloads = downloader.download_mix(mix_url, num_videos)
-
-print(f"Downloaded {successful_downloads} videos successfully")
+successful_downloads = downloader.download_mix(mix_url, num_videos=25)
 ```
 
 ## Features
 
-- Download videos from YouTube Mix playlists
-- Clean YouTube URLs automatically
-- Progress tracking and callbacks
-- High-quality video and audio
-- Automatic merging of video and audio streams
-- Error handling and retry mechanism
+- Single video and mix playlist downloads
+- Custom format options
+- Progress tracking
+- High-quality video/audio
+- Automatic stream merging
+- Error handling
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **No Sound in Downloaded Videos**
-   - Make sure FFmpeg is properly installed
-   - Check if FFmpeg is in your system PATH
+1. **No Audio**
+   - Verify FFmpeg: `ffmpeg -version`
+   - Check PATH settings
 
 2. **ChromeDriver Issues**
-   - Ensure Chrome/Chromium is installed
-   - Update Chrome to the latest version
-   - Let webdriver-manager handle ChromeDriver installation
+   - Update Chrome
+   - Let webdriver-manager handle installation
 
 3. **Permission Issues**
-   - On Linux/macOS, ensure proper permissions for the output directory
-   - Run with appropriate user privileges
+   - Check output directory permissions
+   - Run with appropriate privileges
 
-### Checking Dependencies
+## Development
 
-Verify FFmpeg installation:
 ```bash
-ffmpeg -version
-```
-
-Verify Chrome installation:
-```bash
-google-chrome --version  # Linux
-"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --version  # macOS
-reg query "HKEY_CURRENT_USER\Software\Google\Chrome\BLBeacon" /v version  # Windows
-```
-
-## Development Setup
-
-1. Clone the repository
-```bash
-git clone https://github.com/yourusername/youtube_mix_dl.git
+# Setup
+git clone https://github.com/benny-png/YOUR_YOUTUBE_MUSIC_MIX_DOWNLOADER.git
 cd youtube_mix_dl
-```
-
-2. Create a virtual environment
-```bash
 python -m venv venv
 source venv/bin/activate  # Linux/macOS
 venv\Scripts\activate     # Windows
-```
 
-3. Install development dependencies
-```bash
+# Install dev dependencies
 pip install build twine pytest black isort mypy
-```
-
-4. Install the package in editable mode
-```bash
 pip install -e .
+
+# Tests and formatting
+pytest
+black . && isort .
 ```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests: `pytest`
-5. Format code: `black . && isort .`
-6. Submit a pull request
 
 ## License
 

@@ -6,15 +6,15 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 import os
 import yt_dlp
-from typing import List, Optional, Callable
+from typing import List, Optional, Callable, Union, Dict, Any
 from .utils import clean_youtube_url
 
-class YoutubeMixDownloader:
-    """A class to download videos from YouTube Mix playlists"""
+class YouTubeDownloader:
+    """A class to download videos from YouTube and YouTube Mix playlists"""
     
     def __init__(self, output_path: str = "downloads", progress_callback: Optional[Callable] = None):
         """
-        Initialize the YouTube Mix Downloader
+        Initialize the YouTube Downloader
         
         Args:
             output_path (str): Directory to save downloaded videos
@@ -83,13 +83,14 @@ class YoutubeMixDownloader:
             driver.quit()
         
         return video_urls[:num_videos]
-    
-    def download_video(self, url: str) -> bool:
+
+    def download_video(self, url: str, format_options: Optional[Dict[str, Any]] = None) -> bool:
         """
-        Download a single video
+        Download a single video with custom format options
         
         Args:
             url (str): Video URL to download
+            format_options (Dict[str, Any]): Optional custom format options for yt-dlp
             
         Returns:
             bool: True if download was successful
@@ -111,6 +112,10 @@ class YoutubeMixDownloader:
                     'preferedformat': 'mp4',
                 }],
             }
+            
+            # Update options with custom format if provided
+            if format_options:
+                ydl_opts.update(format_options)
             
             if self.progress_callback:
                 ydl_opts['progress_hooks'] = [
@@ -161,3 +166,29 @@ class YoutubeMixDownloader:
             self.progress_callback(f"Download complete! Successfully downloaded {successful_downloads} videos.")
             
         return successful_downloads
+
+    def get_video_info(self, url: str) -> Optional[Dict[str, Any]]:
+        """
+        Get information about a video without downloading it
+        
+        Args:
+            url (str): Video URL
+            
+        Returns:
+            Optional[Dict[str, Any]]: Video information or None if failed
+        """
+        try:
+            clean_url = clean_youtube_url(url)
+            ydl_opts = {
+                'quiet': True,
+                'no_warnings': True,
+                'extract_flat': True
+            }
+            
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                return ydl.extract_info(clean_url, download=False)
+                
+        except Exception as e:
+            if self.progress_callback:
+                self.progress_callback(f"Error getting video info: {str(e)}")
+            return None
