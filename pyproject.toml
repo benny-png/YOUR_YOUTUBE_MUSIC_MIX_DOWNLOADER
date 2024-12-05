@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "youtube_mix_dl"
-version = "0.1.1"
+version = "0.1.4"
 description = "A Python library for downloading YouTube Mix playlists"
 readme = "README.md"
 requires-python = ">=3.7"
@@ -29,5 +29,5 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/youtube_mix_dl"
-Repository = "https://github.com/yourusername/youtube_mix_dl.git"
+Homepage = "https://github.com/benny-png/youtube_mix_dl"
+Repository = "https://github.com/benny-png/youtube_mix_dl.git"

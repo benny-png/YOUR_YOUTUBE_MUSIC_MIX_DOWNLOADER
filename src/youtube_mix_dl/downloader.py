@@ -7,10 +7,11 @@ import time
 import os
 import yt_dlp
 from typing import List, Optional, Callable, Union, Dict, Any
+from urllib.parse import parse_qs, urlparse
 from .utils import clean_youtube_url
 
 class YouTubeDownloader:
-    """A class to download videos from YouTube and YouTube Mix playlists"""
+    """A class to download videos from YouTube, playlists, and YouTube Mix"""
     
     def __init__(self, output_path: str = "downloads", progress_callback: Optional[Callable] = None):
         """
@@ -37,6 +38,68 @@ class YouTubeDownloader:
         
         service = Service(ChromeDriverManager().install())
         return webdriver.Chrome(service=service, options=chrome_options)
+
+    def _extract_playlist_id(self, url: str) -> Optional[str]:
+        """Extract playlist ID from URL"""
+        parsed = urlparse(url)
+        query_params = parse_qs(parsed.query)
+        return query_params.get('list', [None])[0]
+    
+    def get_playlist_videos(self, playlist_url: str, num_videos: Optional[int] = None) -> List[str]:
+        """
+        Extract video URLs from a YouTube playlist
+        
+        Args:
+            playlist_url (str): URL of the YouTube playlist
+            num_videos (int, optional): Number of videos to extract, None for all
+            
+        Returns:
+            List[str]: List of video URLs
+        """
+        driver = self._setup_driver()
+        video_urls = []
+        playlist_id = self._extract_playlist_id(playlist_url)
+        
+        if not playlist_id:
+            if self.progress_callback:
+                self.progress_callback("Invalid playlist URL")
+            return []
+        
+        try:
+            if self.progress_callback:
+                self.progress_callback("Loading playlist page...")
+            driver.get(playlist_url)
+            time.sleep(3)
+            
+            last_height = driver.execute_script("return document.documentElement.scrollHeight")
+            
+            while True:
+                driver.execute_script("window.scrollTo(0, document.documentElement.scrollHeight);")
+                time.sleep(2)
+                
+                items = driver.find_elements(By.CSS_SELECTOR, "a#video-title")
+                
+                for item in items:
+                    href = item.get_attribute("href")
+                    if href and "watch?v=" in href:
+                        clean_url = clean_youtube_url(href)
+                        if clean_url not in video_urls:
+                            video_urls.append(clean_url)
+                            if self.progress_callback:
+                                self.progress_callback(f"Found {len(video_urls)} videos...")
+                
+                if num_videos and len(video_urls) >= num_videos:
+                    break
+                    
+                new_height = driver.execute_script("return document.documentElement.scrollHeight")
+                if new_height == last_height:
+                    break
+                last_height = new_height
+                    
+        finally:
+            driver.quit()
+        
+        return video_urls[:num_videos] if num_videos else video_urls
     
     def get_mix_videos(self, mix_url: str, num_videos: int = 25) -> List[str]:
         """
@@ -54,7 +117,7 @@ class YouTubeDownloader:
         
         try:
             if self.progress_callback:
-                self.progress_callback("Loading playlist page...")
+                self.progress_callback("Loading mix playlist page...")
             driver.get(mix_url)
             time.sleep(3)
             
@@ -113,7 +176,6 @@ class YouTubeDownloader:
                 }],
             }
             
-            # Update options with custom format if provided
             if format_options:
                 ydl_opts.update(format_options)
             
@@ -153,6 +215,27 @@ class YouTubeDownloader:
             self.progress_callback("Starting YouTube Mix downloader...")
             
         video_urls = self.get_mix_videos(mix_url, num_videos)
+        return self._download_multiple_videos(video_urls)
+
+    def download_playlist(self, playlist_url: str, num_videos: Optional[int] = None) -> int:
+        """
+        Download videos from a YouTube playlist
+        
+        Args:
+            playlist_url (str): URL of the YouTube playlist
+            num_videos (int, optional): Number of videos to download, None for all
+            
+        Returns:
+            int: Number of successfully downloaded videos
+        """
+        if self.progress_callback:
+            self.progress_callback("Starting YouTube playlist downloader...")
+            
+        video_urls = self.get_playlist_videos(playlist_url, num_videos)
+        return self._download_multiple_videos(video_urls)
+
+    def _download_multiple_videos(self, video_urls: List[str]) -> int:
+        """Helper method to download multiple videos"""
         successful_downloads = 0
         
         for index, video_url in enumerate(video_urls, 1):
